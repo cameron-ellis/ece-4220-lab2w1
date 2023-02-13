@@ -53,6 +53,9 @@ int mat_2x10[2][10] = {0};
 int krnl_20x10[1][3] = {0};
 int krnl_2x10[1][3] = {0};
 
+int out_20x10[20][10] = {0};
+int out_2x10[2][10] = {0};
+
 //Declare structure to hold the convolution info (Like number of rows/cols)
 typedef struct {
     int mat_rows;
@@ -65,12 +68,72 @@ conv_info conv_20x10;
 conv_info conv_2x10;
 
 // 1. Single thread to evaluate the convolution 
-void ConvolutionPerMatrix(void *info){
+void ConvolutionPerMatrix20x10(){
 
 	//get the Convolution info
 	// Loop through the matrix based on the info
+    for (int i = 0; i < conv_20x10.mat_rows; i++)
+    {
+        for (int j = 0; j < conv_20x10.mat_cols; j++)
+        {
+            int l_krnl_idx = j - 1;
+            int c_krnl_idx = j;
+            int r_krnl_idx = j + 1;
 
-	pthread_exit(0);
+            // Check to see if left most multiplication is out of bounds
+            if (l_krnl_idx >= 0)
+            {
+                out_20x10[i][l_krnl_idx] = out_20x10[i][l_krnl_idx] + (mat_20x10[i][l_krnl_idx] * krnl_20x10[0][0]);
+            }
+
+            // Perform center multiplication (no need to check, for loop is already checking to make sure it is not out of bounds)
+            out_20x10[i][c_krnl_idx] = out_20x10[i][c_krnl_idx] + (mat_20x10[i][c_krnl_idx] * krnl_20x10[0][1]);
+
+            // Check to see if right most multiplication is out of bounds
+            if (r_krnl_idx < conv_20x10.mat_cols)
+            {
+                out_20x10[i][r_krnl_idx] = out_20x10[i][r_krnl_idx] + (mat_20x10[i][r_krnl_idx] * krnl_20x10[0][2]);
+            }
+            
+        }
+        
+    }
+
+	//pthread_exit(0);
+}
+
+void ConvolutionPerMatrix2x10(){
+
+	//get the Convolution info
+	// Loop through the matrix based on the info
+    for (int i = 0; i < conv_2x10.mat_rows; i++)
+    {
+        for (int j = 0; j < conv_2x10.mat_cols; j++)
+        {
+            int l_krnl_idx = j - 1;
+            int c_krnl_idx = j;
+            int r_krnl_idx = j + 1;
+
+            // Check to see if left most multiplication is out of bounds
+            if (l_krnl_idx >= 0)
+            {
+                out_2x10[i][l_krnl_idx] = out_2x10[i][l_krnl_idx] + (mat_2x10[i][l_krnl_idx] * krnl_2x10[0][0]);
+            }
+
+            // Perform center multiplication (no need to check, for loop is already checking to make sure it is not out of bounds)
+            out_2x10[i][c_krnl_idx] = out_2x10[i][c_krnl_idx] + (mat_2x10[i][c_krnl_idx] * krnl_2x10[0][1]);
+
+            // Check to see if right most multiplication is out of bounds
+            if (r_krnl_idx < conv_2x10.mat_cols)
+            {
+                out_2x10[i][r_krnl_idx] = out_2x10[i][r_krnl_idx] + (mat_2x10[i][r_krnl_idx] * krnl_2x10[0][2]);
+            }
+            
+        }
+        
+    }
+
+	//pthread_exit(0);
 }
 
 
@@ -119,10 +182,55 @@ int main(int argc, char *argv[]) {
 
     fclose(f);
 
+    // Initialize file pointer to open text files
+    f = fopen("2x10.txt", "r");
+
+	// Step-1
+    // ======
+    // Read the file and load the data matrix and filter vector information
+    // into a 2D and 1D array respectively.	
+    fscanf(f, "%d %d", &(conv_2x10.mat_rows), &(conv_2x10.mat_cols));
+
+	// Scan in matrix size using fscanf
+    // Loop to initialize the original matrix
+    // Print the original matrix
+    for (int i = 0; i < conv_2x10.mat_rows; i++)
+    {
+        for (int j = 0; j < conv_2x10.mat_cols; j++)
+        {
+            fscanf(f, "%d", &mat_2x10[i][j]);
+        }
+    }
+
+    print_matrix_2x10(mat_2x10, conv_2x10.mat_rows, conv_2x10.mat_cols);
+
+    // Scan in filter size
+    // Loop to initialize the filter matrix
+    // Print the filter matrix
+    fscanf(f, "%d %d", &(conv_2x10.krnl_rows), &(conv_2x10.krnl_cols));
+
+    for (int i = 0; i < conv_2x10.krnl_rows; i++)
+    {
+        for (int j = 0; j < conv_2x10.krnl_cols; j++)
+        {
+            fscanf(f, "%d", &krnl_2x10[i][j]);
+        }
+    }
+
+    print_kernel(krnl_2x10, conv_2x10.krnl_rows, conv_2x10.krnl_cols);
+
+    fclose(f);
+
 	// Step-2
     // ======
     // Convolve using a single thread.
+    ConvolutionPerMatrix20x10();
 
+    print_matrix_20x10(out_20x10, conv_20x10.mat_rows, conv_20x10.mat_cols);
+
+    ConvolutionPerMatrix2x10();
+
+    print_matrix_2x10(out_2x10, conv_2x10.mat_rows, conv_2x10.mat_cols);
 
 	// Start Timing
     // Use pthread_create function to create pthreads
