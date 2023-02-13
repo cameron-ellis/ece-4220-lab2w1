@@ -1,5 +1,5 @@
 Lab2_Week1 : Lab2-Week1-Basic.c
-		gcc -Wall -pthread $^ -o $@
+		gcc -pthread $^ -o $@
 		clear
 
 

@@ -83,16 +83,16 @@ void ConvolutionPerMatrix20x10(){
             // Check to see if left most multiplication is out of bounds
             if (l_krnl_idx >= 0)
             {
-                out_20x10[i][l_krnl_idx] = out_20x10[i][l_krnl_idx] + (mat_20x10[i][l_krnl_idx] * krnl_20x10[0][0]);
+                out_20x10[i][j] = out_20x10[i][j] + (mat_20x10[i][l_krnl_idx] * krnl_20x10[0][0]);
             }
 
             // Perform center multiplication (no need to check, for loop is already checking to make sure it is not out of bounds)
-            out_20x10[i][c_krnl_idx] = out_20x10[i][c_krnl_idx] + (mat_20x10[i][c_krnl_idx] * krnl_20x10[0][1]);
+            out_20x10[i][j] = out_20x10[i][j] + (mat_20x10[i][c_krnl_idx] * krnl_20x10[0][1]);
 
             // Check to see if right most multiplication is out of bounds
             if (r_krnl_idx < conv_20x10.mat_cols)
             {
-                out_20x10[i][r_krnl_idx] = out_20x10[i][r_krnl_idx] + (mat_20x10[i][r_krnl_idx] * krnl_20x10[0][2]);
+                out_20x10[i][j] = out_20x10[i][j] + (mat_20x10[i][r_krnl_idx] * krnl_20x10[0][2]);
             }
             
         }
@@ -117,16 +117,16 @@ void ConvolutionPerMatrix2x10(){
             // Check to see if left most multiplication is out of bounds
             if (l_krnl_idx >= 0)
             {
-                out_2x10[i][l_krnl_idx] = out_2x10[i][l_krnl_idx] + (mat_2x10[i][l_krnl_idx] * krnl_2x10[0][0]);
+                out_2x10[i][j] = out_2x10[i][j] + (mat_2x10[i][l_krnl_idx] * krnl_2x10[0][0]);
             }
 
             // Perform center multiplication (no need to check, for loop is already checking to make sure it is not out of bounds)
-            out_2x10[i][c_krnl_idx] = out_2x10[i][c_krnl_idx] + (mat_2x10[i][c_krnl_idx] * krnl_2x10[0][1]);
+            out_2x10[i][j] = out_2x10[i][j] + (mat_2x10[i][c_krnl_idx] * krnl_2x10[0][1]);
 
             // Check to see if right most multiplication is out of bounds
             if (r_krnl_idx < conv_2x10.mat_cols)
             {
-                out_2x10[i][r_krnl_idx] = out_2x10[i][r_krnl_idx] + (mat_2x10[i][r_krnl_idx] * krnl_2x10[0][2]);
+                out_2x10[i][j] = out_2x10[i][j] + (mat_2x10[i][r_krnl_idx] * krnl_2x10[0][2]);
             }
             
         }
