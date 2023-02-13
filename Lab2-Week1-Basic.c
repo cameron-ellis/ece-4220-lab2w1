@@ -10,10 +10,59 @@
 #include <semaphore.h>
 #include <errno.h>
 
+// Helper Functions
+// ================
+//Function to print out the result matrix
+void print_matrix_20x10(int arr[20][10], int numRows, int numCols){
+    printf("\n");
+    for(int i = 0; i < numRows; i++){
+        for(int j = 0; j < numCols; j++){
+            printf("%3d ",arr[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+void print_matrix_2x10(int arr[2][10], int numRows, int numCols){
+    printf("\n");
+    for(int i = 0; i < numRows; i++){
+        for(int j = 0; j < numCols; j++){
+            printf("%3d ",arr[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+void print_kernel(int arr[1][3], int numRows, int numCols){
+    printf("\n");
+    for(int i = 0; i < numRows; i++){
+        for(int j = 0; j < numCols; j++){
+            printf("%3d ",arr[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
 
 //Declare Variables to store the given matrix and final results
+int mat_20x10[20][10] = {0};
+int mat_2x10[2][10] = {0};
+
+int krnl_20x10[1][3] = {0};
+int krnl_2x10[1][3] = {0};
 
 //Declare structure to hold the convolution info (Like number of rows/cols)
+typedef struct {
+    int mat_rows;
+    int mat_cols;
+    int krnl_rows;
+    int krnl_cols;
+} conv_info;
+
+conv_info conv_20x10;
+conv_info conv_2x10;
 
 // 1. Single thread to evaluate the convolution 
 void ConvolutionPerMatrix(void *info){
@@ -31,25 +80,44 @@ void ConvolutionPerMatrix(void *info){
 
 // Main function
 int main(int argc, char *argv[]) {
-    
-    // Define variables
-    
-
+    // Initialize file pointer to open text files
+    FILE *f = fopen("20x10.txt", "r");
 
 	// Step-1
     // ======
     // Read the file and load the data matrix and filter vector information
     // into a 2D and 1D array respectively.	
+    fscanf(f, "%d %d", &(conv_20x10.mat_rows), &(conv_20x10.mat_cols));
 
 	// Scan in matrix size using fscanf
     // Loop to initialize the original matrix
     // Print the original matrix
-    
+    for (int i = 0; i < conv_20x10.mat_rows; i++)
+    {
+        for (int j = 0; j < conv_20x10.mat_cols; j++)
+        {
+            fscanf(f, "%d", &mat_20x10[i][j]);
+        }
+    }
+
+    print_matrix_20x10(mat_20x10, conv_20x10.mat_rows, conv_20x10.mat_cols);
+
     // Scan in filter size
     // Loop to initialize the filter matrix
     // Print the filter matrix
+    fscanf(f, "%d %d", &(conv_20x10.krnl_rows), &(conv_20x10.krnl_cols));
 
+    for (int i = 0; i < conv_20x10.krnl_rows; i++)
+    {
+        for (int j = 0; j < conv_20x10.krnl_cols; j++)
+        {
+            fscanf(f, "%d", &krnl_20x10[i][j]);
+        }
+    }
 
+    print_kernel(krnl_20x10, conv_20x10.krnl_rows, conv_20x10.krnl_cols);
+
+    fclose(f);
 
 	// Step-2
     // ======
@@ -85,22 +153,6 @@ int main(int argc, char *argv[]) {
 
 
     return 0;
-}
-
-
-
-// Helper Functions
-// ================
-//Function to print out the result matrix
-void print_matrix(int arr[100][100], int numRows, int numCols){
-    printf("\n");
-    for(int i = 0; i < numRows; i++){
-        for(int j = 0; j < numCols; j++){
-            printf("%3d ",arr[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
 }
 
 
