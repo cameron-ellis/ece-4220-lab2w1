@@ -53,8 +53,11 @@ int mat_2x10[2][10] = {0};
 int krnl_20x10[1][3] = {0};
 int krnl_2x10[1][3] = {0};
 
-int out_20x10[20][10] = {0};
-int out_2x10[2][10] = {0};
+int out_20x10[20][10] = {0}; // single thread output matrix for 20x10
+int out_2x10[2][10] = {0}; // single thread output matrix for 2x10
+
+int rt_out_20x10[20][10] = {0}; // thread per row output matrix for 20x10
+int rt_out_2x10[2][10] = {0}; // thread per row output matrix for 2x10
 
 //Declare structure to hold the convolution info (Like number of rows/cols)
 typedef struct {
@@ -68,7 +71,7 @@ conv_info conv_20x10;
 conv_info conv_2x10;
 
 // 1. Single thread to evaluate the convolution 
-void ConvolutionPerMatrix20x10(){
+void* ConvolutionPerMatrix20x10(){
 
 	//get the Convolution info
 	// Loop through the matrix based on the info
@@ -98,11 +101,9 @@ void ConvolutionPerMatrix20x10(){
         }
         
     }
-
-	//pthread_exit(0);
 }
 
-void ConvolutionPerMatrix2x10(){
+void* ConvolutionPerMatrix2x10(){
 
 	//get the Convolution info
 	// Loop through the matrix based on the info
@@ -132,12 +133,61 @@ void ConvolutionPerMatrix2x10(){
         }
         
     }
-
-	//pthread_exit(0);
 }
 
-
 // 2. Thread function to process one row of the given matrix
+void* ConvolutionPerRow20x10(void* arg){
+    int rowNum = *(int*)arg;
+
+    for (int colNum = 0; colNum < conv_20x10.mat_cols; colNum++)
+    {
+        int l_krnl_idx = colNum - 1;
+        int c_krnl_idx = colNum;
+        int r_krnl_idx = colNum + 1;
+
+        // Check to see if left most multiplication is out of bounds
+        if (l_krnl_idx >= 0)
+        {
+            rt_out_20x10[rowNum][colNum] = rt_out_20x10[rowNum][colNum] + (mat_20x10[rowNum][l_krnl_idx] * krnl_20x10[0][0]);
+        }
+
+        // Perform center multiplication (no need to check, for loop is already checking to make sure it is not out of bounds)
+        rt_out_20x10[rowNum][colNum] = rt_out_20x10[rowNum][colNum] + (mat_20x10[rowNum][c_krnl_idx] * krnl_20x10[0][1]);
+
+        // Check to see if right most multiplication is out of bounds
+        if (r_krnl_idx < conv_20x10.mat_cols)
+        {
+            rt_out_20x10[rowNum][colNum] = rt_out_20x10[rowNum][colNum] + (mat_20x10[rowNum][r_krnl_idx] * krnl_20x10[0][2]);
+        }
+    }
+    free(arg);
+}
+
+void* ConvolutionPerRow2x10(void* arg){
+    int rowNum = *(int*)arg;
+    for (int colNum = 0; colNum < conv_2x10.mat_cols; colNum++)
+    {
+        int l_krnl_idx = colNum - 1;
+        int c_krnl_idx = colNum;
+        int r_krnl_idx = colNum + 1;
+
+        // Check to see if left most multiplication is out of bounds
+        if (l_krnl_idx >= 0)
+        {
+            rt_out_2x10[rowNum][colNum] = rt_out_2x10[rowNum][colNum] + (mat_2x10[rowNum][l_krnl_idx] * krnl_2x10[0][0]);
+        }
+
+        // Perform center multiplication (no need to check, for loop is already checking to make sure it is not out of bounds)
+        rt_out_2x10[rowNum][colNum] = rt_out_2x10[rowNum][colNum] + (mat_2x10[rowNum][c_krnl_idx] * krnl_2x10[0][1]);
+
+        // Check to see if right most multiplication is out of bounds
+        if (r_krnl_idx < conv_2x10.mat_cols)
+        {
+            rt_out_2x10[rowNum][colNum] = rt_out_2x10[rowNum][colNum] + (mat_2x10[rowNum][r_krnl_idx] * krnl_2x10[0][2]);
+        }
+    }
+    free(arg);
+}
 
 // 3. Thread to process each element of the matrix.
 
@@ -224,35 +274,97 @@ int main(int argc, char *argv[]) {
 	// Step-2
     // ======
     // Convolve using a single thread.
-    ConvolutionPerMatrix20x10();
-
-    print_matrix_20x10(out_20x10, conv_20x10.mat_rows, conv_20x10.mat_cols);
-
-    ConvolutionPerMatrix2x10();
-
-    print_matrix_2x10(out_2x10, conv_2x10.mat_rows, conv_2x10.mat_cols);
-
+    pthread_t single_th_20x10; // thread for 20x10
+    pthread_t single_th_2x10;  // thread for 2x10
+    clock_t start;
+    clock_t end;
+    double time_20x10;
+    double time_2x10;
+    
+    printf("\n\n**Case-1: Convolution using single thread**\n\n");
 	// Start Timing
-    // Use pthread_create function to create pthreads
+    start = clock();
+    // Use pthread_create function to create threads
+    pthread_create(&single_th_20x10, NULL, &ConvolutionPerMatrix20x10, NULL);
     // Use pthread_join the join the threads
+    pthread_join(single_th_20x10, NULL);
 	// End timing
+    end = clock();
+    time_20x10 = (double)(end - start) * ((double)1000/CLOCKS_PER_SEC);
+
+    // Start Timing
+    start = clock();
+    // Use pthread_create function to create threads
+    pthread_create(&single_th_2x10, NULL, &ConvolutionPerMatrix2x10, NULL);
+    // Use pthread_join the join the threads
+    pthread_join(single_th_2x10, NULL);
+	// End timing
+    end = clock();
+    time_2x10 = (double)(end - start) * ((double)1000/CLOCKS_PER_SEC);
 
 	// Print out search count with 1 thread and the time it took
+    printf("Single Thread 20x10 Time: %fms\n", time_20x10);
+    print_matrix_20x10(out_20x10, conv_20x10.mat_rows, conv_20x10.mat_cols);
 
-
+    printf("Single Thread 2x10 Time: %fms\n", time_2x10);
+    print_matrix_2x10(out_2x10, conv_2x10.mat_rows, conv_2x10.mat_cols);
 
 	// Step-3
     // ======
     // Convolution using 1 thread per row
     printf("\n\n**Case-2: Convolution using single thread per row**\n");
+    // Create thread array and variable to hold elapsed time
+    pthread_t rowThread_20x10[20];
+    double rt_time_20x10;
+    // Start timer
+    start = clock();
+    // Create threads for each row, and pass to thread handler to do convolution
+    for (int i = 0; i < conv_20x10.mat_rows; i++)
+    {
+        int* rowNum = malloc(sizeof(int));
+        *rowNum = i;
+        pthread_create(&rowThread_20x10[i], NULL, &ConvolutionPerRow20x10, rowNum);
+    }
+    // Join all threads
+    for (int rowNum = 0; rowNum < conv_20x10.mat_rows; rowNum++)
+    {
+        pthread_join(rowThread_20x10[rowNum], NULL);
+    }
+    // Stop Timer
+    end = clock();
+    // Calculate and print elapsed time and convolution result
+    rt_time_20x10 = (double)(end - start) * ((double)1000/CLOCKS_PER_SEC);
+    printf("Thread Per Row 20x10 Time: %fms\n", rt_time_20x10);
+    print_matrix_20x10(rt_out_20x10, conv_20x10.mat_rows, conv_20x10.mat_cols);
 
-
-
+    // Create thread array and variable to hold elapsed time
+    pthread_t rowThread_2x10[2];
+    double rt_time_2x10;
+    // Start timer
+    start = clock();
+    // Create threads for each row, and pass to thread handler to do convolution
+    for (int i = 0; i < conv_2x10.mat_rows; i++)
+    {
+        int* rowNum = malloc(sizeof(int));
+        *rowNum = i;
+        pthread_create(&rowThread_2x10[i], NULL, &ConvolutionPerRow2x10, rowNum);
+    }
+    // Join all threads
+    for (int rowNum = 0; rowNum < conv_2x10.mat_rows; rowNum++)
+    {
+        pthread_join(rowThread_2x10[rowNum], NULL);
+    }
+    // Stop Timer
+    end = clock();
+    // Calculate and print elapsed time and convolution result
+    rt_time_2x10 = (double)(end - start) * ((double)1000/CLOCKS_PER_SEC);
+    printf("Thread Per Row 2x10 Time: %fms\n", rt_time_2x10);
+    print_matrix_2x10(rt_out_2x10, conv_2x10.mat_rows, conv_2x10.mat_cols);
 
     // Step-4
     // ======
     // Convolution with 1 thread per element
-    printf("\n\n**Case 3: Convolution with 1 thread per row**\n");
+    printf("\n\n**Case 3: Convolution with 1 thread per element**\n");
 
 
 
