@@ -62,6 +62,16 @@ int rt_out_2x10[2][10] = {0}; // thread per row output matrix for 2x10
 int et_out_20x10[20][10] = {0}; // thread per element output matrix for 20x10
 int et_out_2x10[2][10] = {0}; // thread per element output matrix for 2x10
 
+// Convolution Count Globals
+int out_count_20x10 = 0;
+int out_count_2x10 = 0;
+
+int rt_count_20x10 = 0;
+int rt_count_2x10 = 0;
+
+int et_count_20x10 = 0;
+int et_count_2x10 = 0;
+
 //Declare structure to hold the convolution info (Like number of rows/cols)
 typedef struct {
     int mat_rows;
@@ -107,10 +117,13 @@ void* ConvolutionPerMatrix20x10(){
             {
                 out_20x10[i][j] = out_20x10[i][j] + (mat_20x10[i][r_krnl_idx] * krnl_20x10[0][2]);
             }
-            
+            // Increment convolution count
+            out_count_20x10++;
         }
         
     }
+    // Exit pthread
+    pthread_exit(0);
 }
 
 void* ConvolutionPerMatrix2x10(){
@@ -139,10 +152,13 @@ void* ConvolutionPerMatrix2x10(){
             {
                 out_2x10[i][j] = out_2x10[i][j] + (mat_2x10[i][r_krnl_idx] * krnl_2x10[0][2]);
             }
-            
+            // Increment convolution count
+            out_count_2x10++;
         }
         
     }
+    // Exit pthread
+    pthread_exit(0);
 }
 
 // 2. Thread function to process one row of the given matrix
@@ -169,8 +185,12 @@ void* ConvolutionPerRow20x10(void* arg){
         {
             rt_out_20x10[rowNum][colNum] = rt_out_20x10[rowNum][colNum] + (mat_20x10[rowNum][r_krnl_idx] * krnl_20x10[0][2]);
         }
+        // Increment convolution count
+        rt_count_20x10++;
     }
+    // Free passed argument and exit pthread
     free(arg);
+    pthread_exit(0);
 }
 
 void* ConvolutionPerRow2x10(void* arg){
@@ -195,12 +215,17 @@ void* ConvolutionPerRow2x10(void* arg){
         {
             rt_out_2x10[rowNum][colNum] = rt_out_2x10[rowNum][colNum] + (mat_2x10[rowNum][r_krnl_idx] * krnl_2x10[0][2]);
         }
+        // Increment convolution count
+        rt_count_2x10++;
     }
+    // Free passed argument and exit pthread
     free(arg);
+    pthread_exit(0);
 }
 
 // 3. Thread to process each element of the matrix.
 void* ConvolutionPerElement20x10(void* arg){
+    // Get info for which element thread is working on
     element_info info = *(element_info*)arg;
     int rowNum = info.row;
     int colNum = info.column;
@@ -224,10 +249,16 @@ void* ConvolutionPerElement20x10(void* arg){
         et_out_20x10[rowNum][colNum] = et_out_20x10[rowNum][colNum] + (mat_20x10[rowNum][r_krnl_idx] * krnl_20x10[0][2]);
     }
 
+    // Increment convolution count
+    et_count_20x10++;
+
+    // Free passed argument and exit pthread
     free(arg);
+    pthread_exit(0);
 }
 
 void* ConvolutionPerElement2x10(void* arg){
+    // Get info for which element thread is working on
     element_info info = *(element_info*)arg;
     int rowNum = info.row;
     int colNum = info.column;
@@ -250,8 +281,12 @@ void* ConvolutionPerElement2x10(void* arg){
     {
         et_out_2x10[rowNum][colNum] = et_out_2x10[rowNum][colNum] + (mat_2x10[rowNum][r_krnl_idx] * krnl_2x10[0][2]);
     }
+    // Increment convolution count
+    et_count_2x10++;
 
+    // Free passed argument and exit pthread
     free(arg);
+    pthread_exit(0);
 }
 
 // Main function
