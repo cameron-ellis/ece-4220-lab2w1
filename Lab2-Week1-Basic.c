@@ -401,11 +401,13 @@ int main(int argc, char *argv[]) {
     time_2x10 = (double)(end - start) * ((double)1000/CLOCKS_PER_SEC);
 
 	// Print out search count with 1 thread and the time it took
-    printf("Single Thread 20x10 Time: %fms\n", time_20x10);
     print_matrix_20x10(out_20x10, conv_20x10.mat_rows, conv_20x10.mat_cols);
+    printf("Single Thread 20x10 Time: %fms\n", time_20x10);
+    printf("Single Thread 20x10 Convolution Count: %d\n", out_count_20x10);
 
-    printf("Single Thread 2x10 Time: %fms\n", time_2x10);
     print_matrix_2x10(out_2x10, conv_2x10.mat_rows, conv_2x10.mat_cols);
+    printf("Single Thread 2x10 Time: %fms\n", time_2x10);
+    printf("Single Thread 2x10 Convolution Count: %d\n", out_count_2x10);
 
 	// Step-3
     // ======
@@ -432,8 +434,9 @@ int main(int argc, char *argv[]) {
     end = clock();
     // Calculate and print elapsed time and convolution result
     rt_time_20x10 = (double)(end - start) * ((double)1000/CLOCKS_PER_SEC);
-    printf("Thread Per Row 20x10 Time: %fms\n", rt_time_20x10);
     print_matrix_20x10(rt_out_20x10, conv_20x10.mat_rows, conv_20x10.mat_cols);
+    printf("Thread Per Row 20x10 Time: %fms\n", rt_time_20x10);
+    printf("Thread Per Row 20x10 Convolution Count: %d\n", rt_count_20x10);
 
     // Create thread array and variable to hold elapsed time
     pthread_t rowThread_2x10[2];
@@ -456,8 +459,9 @@ int main(int argc, char *argv[]) {
     end = clock();
     // Calculate and print elapsed time and convolution result
     rt_time_2x10 = (double)(end - start) * ((double)1000/CLOCKS_PER_SEC);
-    printf("Thread Per Row 2x10 Time: %fms\n", rt_time_2x10);
     print_matrix_2x10(rt_out_2x10, conv_2x10.mat_rows, conv_2x10.mat_cols);
+    printf("Thread Per Row 2x10 Time: %fms\n", rt_time_2x10);
+    printf("Thread Per Row 2x10 Convolution Count: %d\n", rt_count_2x10);
 
     // Step-4
     // ======
@@ -491,8 +495,9 @@ int main(int argc, char *argv[]) {
     end = clock();
     // Calculate and print elapsed time and convolution result
     et_time_20x10 = (double)(end - start) * ((double)1000/CLOCKS_PER_SEC);
-    printf("Thread Per Element 20x10 Time: %fms\n", et_time_20x10);
     print_matrix_20x10(et_out_20x10, conv_20x10.mat_rows, conv_20x10.mat_cols);
+    printf("Thread Per Element 20x10 Time: %fms\n", et_time_20x10);
+    printf("Thread Per Element 20x10 Convolution Count: %d\n", et_count_20x10);
 
     // Create thread matrix and variable to hold elapsed time
     pthread_t elementThread_2x10[2][10];
@@ -522,8 +527,9 @@ int main(int argc, char *argv[]) {
     end = clock();
     // Calculate and print elapsed time and convolution result
     et_time_2x10 = (double)(end - start) * ((double)1000/CLOCKS_PER_SEC);
-    printf("Thread Per Element 2x10 Time: %fms\n", et_time_2x10);
     print_matrix_2x10(et_out_2x10, conv_2x10.mat_rows, conv_2x10.mat_cols);
+    printf("Thread Per Element 2x10 Time: %fms\n", et_time_2x10);
+    printf("Thread Per Element 2x10 Convolution Count: %d\n", et_count_2x10);
     
     return 0;
 }
